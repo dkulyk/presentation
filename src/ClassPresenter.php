@@ -67,10 +67,9 @@ class ClassPresenter
         if (count($this->uses) === 0) {
             return $object;
         }
-        $with = $this->normalizeWith($with);
-        $result = $this->call($this->uses, $object, $result, array_keys($with));
+        $result = $this->call($this->uses, $object, $result, $with);
 
-        foreach ($with as $name => $with2) {
+        foreach ($this->normalizeWith($with) as $name => $with2) {
             if (array_key_exists($name, $this->with)) {
                 $result = $this->call($this->with[$name], $object, $result, $with2);
             }

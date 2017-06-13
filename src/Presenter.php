@@ -26,6 +26,11 @@ class Presenter
     }
 
     /**
+     * @var array
+     */
+    protected $aliases = [];
+
+    /**
      * @var callable[][]
      */
     protected $resolvers = [];
@@ -40,15 +45,35 @@ class Presenter
      *
      * @param string   $class
      * @param callable $callback
+     * @param string[] $aliases
      *
      * @return Presenter
      */
-    public function addResolver(string $class, callable $callback): Presenter
+    public function addResolver(string $class, callable $callback, string ...$aliases): Presenter
     {
         if (array_key_exists($class, $this->resolvers)) {
             $this->resolvers[$class][] = $callback;
         } else {
             $this->resolvers[$class] = [$callback];
+        }
+
+        $this->aliases($class, ...$aliases);
+
+        return $this;
+    }
+
+    /**
+     * Add aliases.
+     *
+     * @param string   $class
+     * @param string[] $aliases
+     *
+     * @return Presenter
+     */
+    public function aliases(string $class, string ...$aliases): Presenter
+    {
+        foreach ($aliases as $alias) {
+            $this->aliases[$alias] = $class;
         }
 
         return $this;
@@ -79,9 +104,15 @@ class Presenter
      */
     public function resolve(string $class)
     {
+        //resolve alias.
+        if (array_key_exists($class, $this->aliases)) {
+            $class = $this->aliases[$class];
+        }
+
         if (array_key_exists($class, $this->presenters)) {
             return $this->presenters[$class];
         }
+
         if (array_key_exists($class, $this->resolvers)) {
             $presenter = $this->presenter($class);
             foreach ($this->resolvers[$class] as $callable) {
@@ -94,12 +125,12 @@ class Presenter
 
     /**
      * @param mixed $object
-     * @param array $with
+     * @param array|string|null $with
      * @param mixed $default
      *
      * @return mixed
      */
-    public function present($object, array $with = [], $default = null)
+    public function present($object, $with = null, $default = null)
     {
         if (is_array($object)) {
             return array_map([$this, 'present'], $object);
@@ -112,7 +143,7 @@ class Presenter
         if (is_object($object)) {
             $presenter = $this->resolve(get_class($object));
             if ($presenter !== null) {
-                return $presenter->present($object, $with, $default);
+                return $presenter->present($object, is_string($with) ? explode(',', $with) : (array)$with, $default);
             }
         }
 
