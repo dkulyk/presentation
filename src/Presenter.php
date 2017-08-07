@@ -133,7 +133,9 @@ class Presenter
     public function present($object, $with = null, $default = null)
     {
         if (is_array($object)) {
-            return array_map([$this, 'present'], $object);
+            return array_map(function ($object) use ($with) {
+                return $this->present($object, $with);
+            }, $object);
         }
 
         if (is_scalar($object)) {
