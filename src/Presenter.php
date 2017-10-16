@@ -59,6 +59,10 @@ class Presenter
 
         $this->aliases($class, ...$aliases);
 
+        if (array_key_exists($class, $this->presenters)) {
+            $callback($this->presenters[$class], $this);
+        }
+
         return $this;
     }
 
