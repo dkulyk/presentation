@@ -64,13 +64,13 @@ class ClassPresenter
      */
     public function present($object, array $with = [], $result = null)
     {
-        if (count($this->uses) === 0) {
+        if (\count($this->uses) === 0) {
             return $object;
         }
         $result = $this->call($this->uses, $object, $result, $with);
 
         foreach ($this->normalizeWith($with) as $name => $with2) {
-            if (array_key_exists($name, $this->with)) {
+            if (\array_key_exists($name, $this->with)) {
                 $result = $this->call($this->with[$name], $object, $result, $with2);
             }
         }
@@ -87,8 +87,8 @@ class ClassPresenter
      */
     protected function call(array $callable, $object, $result, array $with)
     {
-        return array_reduce($callable, function ($result, callable $callable) use ($object, $with) {
-            return call_user_func($callable, $object, $result, $with, $this->presenter);
+        return \array_reduce($callable, function ($result, callable $callable) use ($object, $with) {
+            return \call_user_func($callable, $object, $result, $with, $this->presenter);
         }, $result);
     }
 
@@ -99,12 +99,12 @@ class ClassPresenter
      */
     protected function normalizeWith(array $with): array
     {
-        return array_reduce($with, function (array $result, string $with) {
-            $args = explode('.', $with, 2);
-            if (!array_key_exists($args[0], $result)) {
+        return \array_reduce($with, function (array $result, string $with) {
+            $args = \explode('.', $with, 2);
+            if (!\array_key_exists($args[0], $result)) {
                 $result[$args[0]] = [];
             }
-            if (count($args) > 1) {
+            if (\count($args) > 1) {
                 $result[$args[0]][] = $args[1];
             }
 
@@ -113,14 +113,21 @@ class ClassPresenter
     }
 
     /**
-     * @param string   $with
-     * @param callable $callback
+     * @param string        $with
+     * @param callable|null $callback
      *
      * @return ClassPresenter
      */
-    public function with(string $with, callable $callback): ClassPresenter
+    public function with(string $with, callable $callback = null): ClassPresenter
     {
-        if (array_key_exists($with, $this->with)) {
+        if ($callback === null) {
+            $callback = function ($object, $result, array $newWith, Presenter $presenter) use ($with) {
+                $result[$with] =
+                    $presenter->present(\is_array($object) ? $object[$with] : $object->{$with}, $newWith, []);
+                return $result;
+            };
+        }
+        if (\array_key_exists($with, $this->with)) {
             $this->with[$with][] = $callback;
         } else {
             $this->with[$with] = [$callback];

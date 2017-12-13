@@ -51,7 +51,7 @@ class Presenter
      */
     public function addResolver(string $class, callable $callback, string ...$aliases): Presenter
     {
-        if (array_key_exists($class, $this->resolvers)) {
+        if (\array_key_exists($class, $this->resolvers)) {
             $this->resolvers[$class][] = $callback;
         } else {
             $this->resolvers[$class] = [$callback];
@@ -59,7 +59,7 @@ class Presenter
 
         $this->aliases($class, ...$aliases);
 
-        if (array_key_exists($class, $this->presenters)) {
+        if (\array_key_exists($class, $this->presenters)) {
             $callback($this->presenters[$class], $this);
         }
 
@@ -91,7 +91,7 @@ class Presenter
      */
     public function presenter(string $class, callable $callback = null): ClassPresenter
     {
-        if (!array_key_exists($class, $this->presenters)) {
+        if (!\array_key_exists($class, $this->presenters)) {
             $this->presenters[$class] = new ClassPresenter($this, $class);
         }
         if ($callback !== null) {
@@ -109,18 +109,18 @@ class Presenter
     public function resolve(string $class)
     {
         //resolve alias.
-        if (array_key_exists($class, $this->aliases)) {
-            $class = $this->aliases[$class];
+        if (\array_key_exists($class, $this->aliases)) {
+            return $this->resolve($this->aliases[$class]);
         }
 
-        if (array_key_exists($class, $this->presenters)) {
+        if (\array_key_exists($class, $this->presenters)) {
             return $this->presenters[$class];
         }
 
-        if (array_key_exists($class, $this->resolvers)) {
+        if (\array_key_exists($class, $this->resolvers)) {
             $presenter = $this->presenter($class);
             foreach ($this->resolvers[$class] as $callable) {
-                call_user_func($callable, $presenter, $this);
+                \call_user_func($callable, $presenter, $this);
             }
             return $presenter;
         }
@@ -128,28 +128,28 @@ class Presenter
     }
 
     /**
-     * @param mixed $object
+     * @param mixed             $object
      * @param array|string|null $with
-     * @param mixed $default
+     * @param mixed             $default
      *
      * @return mixed
      */
     public function present($object, $with = null, $default = null)
     {
-        if (is_array($object)) {
-            return array_map(function ($object) use ($with) {
+        if (\is_array($object)) {
+            return \array_map(function ($object) use ($with) {
                 return $this->present($object, $with);
             }, $object);
         }
 
-        if (is_scalar($object)) {
+        if (\is_scalar($object)) {
             return $object;
         }
 
-        if (is_object($object)) {
-            $presenter = $this->resolve(get_class($object));
+        if (\is_object($object)) {
+            $presenter = $this->resolve(\get_class($object));
             if ($presenter !== null) {
-                return $presenter->present($object, is_string($with) ? explode(',', $with) : (array)$with, $default);
+                return $presenter->present($object, \is_string($with) ? \explode(',', $with) : (array) $with, $default);
             }
         }
 
